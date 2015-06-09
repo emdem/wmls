@@ -173,6 +173,12 @@ END
     return [r.to_i,s,x];
   end
 
+  #write the witsml response xml to a csv file
+  def write_csv_file(xml_data, filename)
+    doc = Nokogiri::XML(xml_data)
+    csv = CSV.open(filename, "wb")
+    csv << 'asdfasdf,asdf' 
+  end
 
   def post(io, url, user, pass, headers)    
     url = URI.parse(url)  if url.is_a? String

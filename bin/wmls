@@ -15,6 +15,8 @@
 
 require 'rubygems'
 require 'optparse'
+require 'nokogiri'
+require 'csv'
 require 'wmls'
 options = {:defs => {}}
 
@@ -30,6 +32,9 @@ opts =OptionParser.new do |o|
   end
   o.on("-r", "--url url", "URL of the WITSML service") do |v|
     options[:url] = v
+  end
+  o.on("-c", "--csv filename", "Filename for CSV export of data (optional)") do |v|
+    options[:csv] = v
   end
   o.on("-t", "--timeout seconds", "timeout in seconds (optional, default 60)") do |v|
     options[:timeout] = v
@@ -52,6 +57,20 @@ opts =OptionParser.new do |o|
   o.on_tail("-h", "--help", "Show this message") do
     puts o
     exit
+  end
+end
+
+
+# Get the xml output and write it as a CSV to a given filename
+def write_xml_to_csv(xml_data, filename)
+  csv = CSV.open(filename, "wb")
+  xmldoc = Nokogiri::XML(xml_data)
+  xmldoc.xpath('/*/*').each do |row_xml|
+    row_values = []
+    row_xml.xpath('./*').each do |field|
+      row_values << field.text
+    end
+    csv << row_values
   end
 end
 
@@ -108,6 +127,11 @@ if (status != 1)
   $stderr.puts "Error #{status}: #{supp_msg}"
   status
 else
-  $stdout.puts witsml
+  if (options[:csv])
+    write_xml_to_csv(witsml, options[:csv])
+    $stdout.puts witsml
+  else
+    $stdout.puts witsml
+  end
   0
 end
